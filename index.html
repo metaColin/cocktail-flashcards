@@ -36,6 +36,8 @@
       background: #1a1a1a; color: #eee; border: 0; border-bottom: 1px solid #000; padding: 12px 16px; font: inherit; font-size: 15px; width: 100%; text-align: left;
     }
     .drawer-toggle .count { color: #888; }
+    .drawer-toggle .drawer-label { display: flex; align-items: center; gap: 12px; }
+    .drawer-toggle .hamburger { flex: none; }
     .sidebar { position: static; width: 100%; align-self: stretch; flex: none; height: auto; border-right: 0; border-bottom: 1px solid #000; gap: 14px; }
     .sidebar section { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
     .sidebar section h2, .sidebar section .sub, .sidebar input[type=search] { flex-basis: 100%; }
@@ -50,7 +52,10 @@
 </style>
 </head>
 <body>
-<button class="drawer-toggle" id="drawerToggle" type="button"><span>Filters &amp; options</span><span class="count" id="countMobile"></span></button>
+<button class="drawer-toggle" id="drawerToggle" type="button" aria-expanded="false" aria-controls="sidebar">
+  <span class="drawer-label"><svg class="hamburger" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Filters &amp; options</span>
+  <span class="count" id="countMobile"></span>
+</button>
 <aside class="sidebar collapsed" id="sidebar">
   <section>
     <h2>Search</h2>
@@ -185,7 +190,11 @@
   // Drawer and card scaling for narrow screens
   const sidebar = document.getElementById('sidebar');
   const narrow = window.matchMedia('(max-width: 900px)');
-  document.getElementById('drawerToggle').addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+  const drawerToggle = document.getElementById('drawerToggle');
+  drawerToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    drawerToggle.setAttribute('aria-expanded', String(!sidebar.classList.contains('collapsed')));
+  });
   function applyLayout() {
     if (narrow.matches) {
       const cardPx = 5 * 96 + 32;               // 5in card plus side gutters
