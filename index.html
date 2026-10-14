@@ -50,7 +50,8 @@
   }
   /* Lightbox: tap a card to focus on it; swipe or arrow keys to move through the visible cards */
   .list .card { cursor: zoom-in; }
-  .lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; touch-action: pan-y; }
+  .lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; touch-action: none; overscroll-behavior: contain; }
+  body.lb-open { position: fixed; left: 0; right: 0; overflow: hidden; }
   .lightbox.open { display: flex; }
   .lightbox .stage { position: relative; transform-origin: center center; }
   .lightbox .stage .card { box-shadow: 0 8px 40px rgba(0,0,0,.8); cursor: default; }
@@ -270,16 +271,28 @@
     lbStage.appendChild(src.cloneNode(true));
     lbPos.textContent = `${lbIndex + 1} / ${lbItems.length}`;
     lbFit();
-    lb.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    if (!lb.classList.contains('open')) {
+      // iOS Safari ignores overflow:hidden on body, so pin the page in place and restore the scroll on close
+      lbScrollY = window.scrollY;
+      document.body.style.top = `-${lbScrollY}px`;
+      document.body.classList.add('lb-open');
+      lb.classList.add('open');
+    }
   }
+  let lbScrollY = 0;
   function lbFit() {
     const card = lbStage.firstElementChild; if (!card) return;
     const w = 5 * 96, hgt = 3 * 96;                      // card size in CSS px
     const s = Math.min((window.innerWidth - 24) / w, (window.innerHeight - 90) / hgt);
     lbStage.style.transform = `scale(${s.toFixed(3)})`;
   }
-  function lbClose() { lb.classList.remove('open'); lbStage.innerHTML = ''; document.body.style.overflow = ''; }
+  function lbClose() {
+    lb.classList.remove('open'); lbStage.innerHTML = '';
+    document.body.classList.remove('lb-open'); document.body.style.top = '';
+    window.scrollTo(0, lbScrollY);
+  }
+  // Swallow every touch move while the viewer is open so nothing underneath scrolls
+  lb.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   list.addEventListener('click', (e) => {
     const card = e.target.closest('.card'); if (!card) return;
     const pair = card.closest('.pair');
