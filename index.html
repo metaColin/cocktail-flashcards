@@ -27,11 +27,31 @@
   .card { box-shadow: 0 2px 12px rgba(0,0,0,.6); }
   .card.overflow { outline: 2px solid #ff0; }
   .hidden { display: none !important; }
-  @media print { .sidebar { display: none; } body { background: #fff; display: block; } }
+  /* Phone and narrow windows: filters become a drawer, cards scale to the viewport width. */
+  .drawer-toggle { display: none; }
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    .drawer-toggle {
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 11;
+      background: #1a1a1a; color: #eee; border: 0; border-bottom: 1px solid #000; padding: 12px 16px; font: inherit; font-size: 15px; width: 100%; text-align: left;
+    }
+    .drawer-toggle .count { color: #888; }
+    .sidebar { position: static; width: 100%; align-self: stretch; flex: none; height: auto; border-right: 0; border-bottom: 1px solid #000; gap: 14px; }
+    .sidebar section { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
+    .sidebar section h2, .sidebar section .sub, .sidebar input[type=search] { flex-basis: 100%; }
+    .sidebar.collapsed { display: none; }
+    .sidebar section:first-child .count { display: none; }
+    .sidebar .export { margin-top: 0; }
+    .list { padding: 16px 0; gap: 16px; }
+    /* zoom scales the 5x3in cards to fit: --card-scale is set from the viewport width by script */
+    .pair { zoom: var(--card-scale, 1); flex-wrap: wrap; justify-content: center; }
+  }
+  @media print { .sidebar, .drawer-toggle { display: none; } body { background: #fff; display: block; } }
 </style>
 </head>
 <body>
-<aside class="sidebar">
+<button class="drawer-toggle" id="drawerToggle" type="button"><span>Filters &amp; options</span><span class="count" id="countMobile"></span></button>
+<aside class="sidebar collapsed" id="sidebar">
   <section>
     <h2>Search</h2>
     <input type="search" id="q" placeholder="Name or ingredient">
@@ -108,6 +128,7 @@
       pair.querySelector('.back-side').classList.toggle('hidden', !b);
     }
     document.getElementById('count').textContent = `${n} / ${window.COCKTAILS.length}`;
+    document.getElementById('countMobile').textContent = `${n} / ${window.COCKTAILS.length}`;
   }
 
   dark.addEventListener('change', () => { document.documentElement.dataset.theme = dark.checked ? 'dark' : ''; });
@@ -160,6 +181,25 @@
   }
   document.getElementById('exportPdf').addEventListener('click', exportPdf);
   window.addEventListener('afterprint', () => { const p = document.getElementById('print'); if (p) p.remove(); });
+
+  // Drawer and card scaling for narrow screens
+  const sidebar = document.getElementById('sidebar');
+  const narrow = window.matchMedia('(max-width: 900px)');
+  document.getElementById('drawerToggle').addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+  function applyLayout() {
+    if (narrow.matches) {
+      const cardPx = 5 * 96 + 32;               // 5in card plus side gutters
+      const s = Math.min(1, (window.innerWidth) / cardPx);
+      document.documentElement.style.setProperty('--card-scale', s.toFixed(3));
+    } else {
+      document.documentElement.style.removeProperty('--card-scale');
+      sidebar.classList.remove('collapsed');
+    }
+  }
+  if (!narrow.matches) sidebar.classList.remove('collapsed');
+  window.addEventListener('resize', applyLayout);
+  narrow.addEventListener('change', applyLayout);
+  applyLayout();
 
   // Fit once the webfont has loaded, otherwise measurements are off.
   document.fonts.ready.then(() => {
