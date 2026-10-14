@@ -1,134 +1,139 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cocktail Flashcards</title>
-<link rel="stylesheet" href="card.css">
-<link rel="stylesheet" href="print.css">
+<link rel="stylesheet" href="vendor/bootstrap.min.css">
+<link rel="stylesheet" href="card.css?v=2">
+<link rel="stylesheet" href="print.css?v=2">
 <style>
-  body { margin: 0; background: #2a2a2a; color: #ddd; font-family: 'Barlow', sans-serif; display: flex; min-height: 100vh; }
-  .sidebar {
-    position: sticky; top: 0; align-self: flex-start; height: 100vh; box-sizing: border-box; overflow-y: auto;
-    width: 250px; flex: 0 0 250px; background: #1a1a1a; border-right: 1px solid #000; padding: 18px 18px 24px; font-size: 14px;
-    display: flex; flex-direction: column; gap: 20px;
-  }
-  .sidebar h2 { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; }
-  .sidebar section { display: flex; flex-direction: column; gap: 6px; }
-  .sidebar label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
-  .sidebar .sub { color: #777; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin: 6px 0 2px; }
-  .sidebar input[type=search] { width: 100%; box-sizing: border-box; background: #111; color: #eee; border: 1px solid #444; padding: 6px 8px; font: inherit; }
-  .sidebar .count { color: #888; }
-  .sidebar .export { margin-top: auto; }
-  .sidebar button { width: 100%; background: #b5312a; color: #fff; border: 0; padding: 10px 12px; font: inherit; font-weight: 600; cursor: pointer; border-radius: 3px; }
-  .sidebar button:hover { background: #d13a31; }
-  .list { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; justify-content: center; align-content: flex-start; }
+  :root { --bs-body-font-family: 'Barlow', system-ui, sans-serif; }
+  body { background: #2a2a2a; }
+  /* Sidebar: static column from lg up, Bootstrap offcanvas below */
+  #sidebar { background: #1a1a1a; }
+  @media (min-width: 992px) { #sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 1px solid #000; } }
+  #sidebar h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin: 0 0 6px; }
+  #sidebar .sub { color: #777; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin: 6px 0 2px; flex-basis: 100%; }
+  #sidebar section { margin-bottom: 18px; }
+  #sidebar .checks { display: flex; flex-wrap: wrap; column-gap: 18px; }
+  @media (min-width: 992px) { #sidebar .checks { flex-direction: column; } }
+  #sidebar .form-check { margin-bottom: 4px; }
+  .list { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; justify-content: center; align-content: flex-start; }
   .pair { display: flex; gap: 12px; align-items: flex-start; }
-  .card { box-shadow: 0 2px 12px rgba(0,0,0,.6); }
-  .card.overflow { outline: 2px solid #ff0; }
+  .flashcard { box-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  .flashcard.overflow { outline: 2px solid #ff0; }
   .hidden { display: none !important; }
-  /* Phone and narrow windows: filters become a drawer, cards scale to the viewport width. */
-  .drawer-toggle { display: none; }
-  @media (max-width: 900px) {
-    body { flex-direction: column; }
-    .drawer-toggle {
-      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 11;
-      background: #1a1a1a; color: #eee; border: 0; border-bottom: 1px solid #000; padding: 12px 16px; font: inherit; font-size: 15px; width: 100%; text-align: left;
-    }
-    .drawer-toggle .count { color: #888; }
-    .drawer-toggle .drawer-label { display: flex; align-items: center; gap: 12px; }
-    .drawer-toggle .hamburger { flex: none; }
-    /* The drawer is a fixed panel under the header, so it opens in view no matter how far down the list you are */
-    .sidebar { position: fixed; top: var(--drawer-top, 47px); left: 0; right: 0; bottom: 0; z-index: 12; width: auto; height: auto; overflow-y: auto; overscroll-behavior: contain; border-right: 0; gap: 14px; padding-bottom: 40px; }
-    .sidebar section { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
-    .sidebar section h2, .sidebar section .sub, .sidebar input[type=search] { flex-basis: 100%; }
-    .sidebar.collapsed { display: none; }
-    .sidebar section:first-child .count { display: none; }
-    .sidebar .export { margin-top: 0; }
+  @media (max-width: 991.98px) {
     .list { padding: 16px 0; gap: 16px; }
     /* zoom scales the 5x3in cards to fit: --card-scale is set from the viewport width by script */
     .pair { zoom: var(--card-scale, 1); flex-wrap: wrap; justify-content: center; }
   }
   /* Lightbox: tap a card to focus on it; swipe or arrow keys to move through the visible cards */
-  .list .card { cursor: zoom-in; }
-  .lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; touch-action: none; overscroll-behavior: contain; }
+  .list .flashcard { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; touch-action: none; overscroll-behavior: contain; }
   body.lb-open { position: fixed; left: 0; right: 0; overflow: hidden; }
   .lightbox.open { display: flex; }
   .lightbox .stage { position: relative; transform-origin: center center; }
-  .lightbox .stage .card { box-shadow: 0 8px 40px rgba(0,0,0,.8); cursor: default; }
-  .lightbox .bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: #ddd; font-size: 14px; }
-  .lightbox .bar button, .lightbox .nav { background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 4px; padding: 8px 12px; font: inherit; cursor: pointer; }
-  .lightbox .bar button:hover, .lightbox .nav:hover { background: rgba(255,255,255,.2); }
-  .lightbox .nav { position: fixed; top: 50%; transform: translateY(-50%); font-size: 22px; padding: 14px 12px; }
-  .lightbox .nav.prev { left: 8px; } .lightbox .nav.next { right: 8px; }
-  .lightbox .pos { color: #888; }
-  @media (max-width: 900px) { .lightbox .nav { display: none; } }
-  @media print { .sidebar, .drawer-toggle, .lightbox { display: none !important; } body { background: #fff; display: block; } }
+  .lightbox .stage .flashcard { box-shadow: 0 8px 40px rgba(0,0,0,.8); cursor: default; }
+  .lightbox .bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: #ddd; }
+  .lightbox .lb-nav { position: fixed; top: 50%; transform: translateY(-50%); font-size: 22px; }
+  .lightbox .lb-nav.prev { left: 8px; } .lightbox .lb-nav.next { right: 8px; }
+  @media (max-width: 991.98px) { .lightbox .lb-nav { display: none; } }
+  @media print { .navbar, #sidebar, .lightbox { display: none !important; } body { background: #fff; } }
 </style>
 </head>
 <body>
-<button class="drawer-toggle" id="drawerToggle" type="button" aria-expanded="false" aria-controls="sidebar">
-  <span class="drawer-label"><svg class="hamburger" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Filters &amp; options</span>
-  <span class="count" id="countMobile"></span>
-</button>
-<aside class="sidebar collapsed" id="sidebar">
-  <section>
-    <h2>Search</h2>
-    <input type="search" id="q" placeholder="Name or ingredient">
-    <span class="count" id="count"></span>
-  </section>
-  <section>
-    <h2>Sort</h2>
-    <label><input type="radio" name="sort" value="name" checked> Name</label>
-    <label><input type="radio" name="sort" value="popularity"> Popularity</label>
-    <label><input type="radio" name="sort" value="category"> Category</label>
-  </section>
-  <section>
-    <h2>Sides</h2>
-    <label><input type="checkbox" id="showFront" checked> Front</label>
-    <label><input type="checkbox" id="showBack"> Back</label>
-  </section>
-  <section>
-    <h2>Units</h2>
-    <label><input type="radio" name="unit" value="oz" checked> US ounces</label>
-    <label><input type="radio" name="unit" value="ml"> Millilitres (IBA)</label>
-  </section>
-  <section>
-    <h2>Card</h2>
-    <label><input type="checkbox" id="photos" checked> Photos</label>
-    <label><input type="checkbox" id="punch" checked> Hole punch guide</label>
-    <label><input type="checkbox" id="dark"> Dark theme (ink hog)</label>
-  </section>
-  <section>
-    <h2>Popularity</h2>
-    <label><input type="checkbox" class="tier" value="core" checked> Core</label>
-    <label><input type="checkbox" class="tier" value="common" checked> Common</label>
-    <label><input type="checkbox" class="tier" value="rare" checked> Rare</label>
-  </section>
-  <section>
-    <h2>Categories</h2>
-    <div class="sub">IBA official</div>
-    <label><input type="checkbox" class="cat" value="the-unforgettables" checked> The Unforgettables</label>
-    <label><input type="checkbox" class="cat" value="contemporary-classics" checked> Contemporary Classics</label>
-    <label><input type="checkbox" class="cat" value="new-era-drinks" checked> New Era Drinks</label>
-    <div class="sub">Not IBA</div>
-    <label><input type="checkbox" class="cat" value="simple-drinks" checked> Simple Drinks</label>
-    <label><input type="checkbox" class="cat" value="other-classics" checked> Other Classics</label>
-    <label><input type="checkbox" class="cat" value="zero-proof" checked> Zero Proof</label>
-    <label><input type="checkbox" class="cat" value="regional" checked> Regional</label>
-  </section>
-  <div class="export"><button id="exportPdf">Export PDF</button></div>
-</aside>
-<div class="list" id="list"></div>
+<nav class="navbar navbar-dark bg-dark sticky-top d-lg-none border-bottom border-black">
+  <div class="container-fluid">
+    <button class="navbar-toggler me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Filters and options"><span class="navbar-toggler-icon"></span></button>
+    <span class="navbar-text me-auto text-light">Filters &amp; options</span>
+    <span class="navbar-text text-secondary" id="countMobile"></span>
+  </div>
+</nav>
+<div class="container-fluid">
+  <div class="row">
+    <aside class="col-lg-3 col-xl-2 offcanvas-lg offcanvas-start text-light p-lg-3" id="sidebar" tabindex="-1" aria-labelledby="sidebarLabel">
+      <div class="offcanvas-header d-lg-none">
+        <h5 class="offcanvas-title" id="sidebarLabel">Filters &amp; options</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body d-block">
+        <section>
+          <h2>Search</h2>
+          <input type="search" class="form-control form-control-sm bg-black text-light border-secondary" id="q" placeholder="Name or ingredient">
+          <div class="text-secondary small mt-1" id="count"></div>
+        </section>
+        <section>
+          <h2>Sort</h2>
+          <div class="checks">
+            <div class="form-check"><input class="form-check-input" type="radio" name="sort" id="sortName" value="name" checked><label class="form-check-label" for="sortName">Name</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="sort" id="sortPop" value="popularity"><label class="form-check-label" for="sortPop">Popularity</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="sort" id="sortCat" value="category"><label class="form-check-label" for="sortCat">Category</label></div>
+          </div>
+        </section>
+        <section>
+          <h2>Sides</h2>
+          <div class="checks">
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="showFront" checked><label class="form-check-label" for="showFront">Front</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="showBack"><label class="form-check-label" for="showBack">Back</label></div>
+          </div>
+        </section>
+        <section>
+          <h2>Units</h2>
+          <div class="checks">
+            <div class="form-check"><input class="form-check-input" type="radio" name="unit" id="unitOz" value="oz" checked><label class="form-check-label" for="unitOz">US ounces</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="unit" id="unitMl" value="ml"><label class="form-check-label" for="unitMl">Millilitres (IBA)</label></div>
+          </div>
+        </section>
+        <section>
+          <h2>Card</h2>
+          <div class="checks">
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="photos" checked><label class="form-check-label" for="photos">Photos</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="punch" checked><label class="form-check-label" for="punch">Hole punch guide</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" id="dark"><label class="form-check-label" for="dark">Dark theme (ink hog)</label></div>
+          </div>
+        </section>
+        <section>
+          <h2>Popularity</h2>
+          <div class="checks">
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="tier" id="tierCore" value="core" checked><label class="form-check-label" for="tierCore">Core</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="tier" id="tierCommon" value="common" checked><label class="form-check-label" for="tierCommon">Common</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="tier" id="tierRare" value="rare" checked><label class="form-check-label" for="tierRare">Rare</label></div>
+          </div>
+        </section>
+        <section>
+          <h2>Categories</h2>
+          <div class="checks">
+            <div class="sub">IBA official</div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat1" value="the-unforgettables" checked><label class="form-check-label" for="cat1">The Unforgettables</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat2" value="contemporary-classics" checked><label class="form-check-label" for="cat2">Contemporary Classics</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat3" value="new-era-drinks" checked><label class="form-check-label" for="cat3">New Era Drinks</label></div>
+            <div class="sub">Not IBA</div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat4" value="simple-drinks" checked><label class="form-check-label" for="cat4">Simple Drinks</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat5" value="other-classics" checked><label class="form-check-label" for="cat5">Other Classics</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat6" value="zero-proof" checked><label class="form-check-label" for="cat6">Zero Proof</label></div>
+            <div class="form-check"><input class="form-check-input" type="checkbox" name="cat" id="cat7" value="regional" checked><label class="form-check-label" for="cat7">Regional</label></div>
+          </div>
+        </section>
+        <button class="btn btn-danger w-100 fw-semibold" id="exportPdf">Export PDF</button>
+      </div>
+    </aside>
+    <main class="col-lg-9 col-xl-10 px-0">
+      <div class="list" id="list"></div>
+    </main>
+  </div>
+</div>
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Card viewer">
-  <div class="bar"><span class="pos" id="lbPos"></span><span><button type="button" id="lbFlip">Flip</button> <button type="button" id="lbClose" aria-label="Close">✕</button></span></div>
-  <button type="button" class="nav prev" id="lbPrev" aria-label="Previous">‹</button>
+  <div class="bar"><span class="text-secondary" id="lbPos"></span><span><button type="button" class="btn btn-sm btn-outline-light" id="lbFlip">Flip</button> <button type="button" class="btn btn-sm btn-outline-light" id="lbClose" aria-label="Close">✕</button></span></div>
+  <button type="button" class="btn btn-outline-light lb-nav prev" id="lbPrev" aria-label="Previous">‹</button>
   <div class="stage" id="lbStage"></div>
-  <button type="button" class="nav next" id="lbNext" aria-label="Next">›</button>
+  <button type="button" class="btn btn-outline-light lb-nav next" id="lbNext" aria-label="Next">›</button>
 </div>
 
-<script src="data.js"></script>
-<script src="cards.js"></script>
+<script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="data.js?v=2"></script>
+<script src="cards.js?v=2"></script>
 <script>
   const list = document.getElementById('list');
   const Cards = window.Cards;
@@ -136,7 +141,7 @@
   // ---- Persist every control in the sidebar across reloads (per browser, via localStorage).
   const STORE_KEY = 'cocktail-flashcards.settings';
   const controls = () => [...sidebar.querySelectorAll('input')];
-  const controlKey = (el) => el.type === 'radio' ? `${el.name}=${el.value}` : (el.id || `${el.className}=${el.value}`);
+  const controlKey = (el) => el.name ? `${el.name}=${el.value}` : el.id;
   function saveSettings() {
     try {
       const s = {};
@@ -191,8 +196,8 @@
 
   function update() {
     const f = showFront.checked, b = showBack.checked, q = document.getElementById('q').value.toLowerCase();
-    const cats = new Set([...document.querySelectorAll('.cat:checked')].map((c) => c.value));
-    const tiers = new Set([...document.querySelectorAll('.tier:checked')].map((c) => c.value));
+    const cats = new Set([...document.querySelectorAll('input[name=cat]:checked')].map((c) => c.value));
+    const tiers = new Set([...document.querySelectorAll('input[name=tier]:checked')].map((c) => c.value));
     let n = 0;
     for (const pair of list.children) {
       const vis = cats.has(pair.dataset.cat) && tiers.has(pair.dataset.tier) && (!q || pair.dataset.text.includes(q));
@@ -207,7 +212,7 @@
 
   dark.addEventListener('change', () => { document.documentElement.dataset.theme = dark.checked ? 'dark' : ''; });
   for (const id of ['showFront', 'showBack', 'q']) document.getElementById(id).addEventListener('input', update);
-  for (const c of document.querySelectorAll('.cat, .tier')) c.addEventListener('change', update);
+  for (const c of document.querySelectorAll('input[name=cat], input[name=tier]')) c.addEventListener('change', update);
   photos.addEventListener('change', () => { document.documentElement.classList.toggle('no-photo', !photos.checked); refit(); });
   punch.addEventListener('change', () => { document.documentElement.classList.toggle('no-punch', !punch.checked); refit(); });
   for (const r of document.querySelectorAll('input[name=unit]')) r.addEventListener('change', () => { Cards.setUnit(r.value); render(); refit(); });
@@ -223,7 +228,7 @@
     return corners.map(([cx, cy, dx, dy]) => {
       const hx = dx < 0 ? cx - GAP - MARK : cx + GAP;
       const vy = dy < 0 ? cy - GAP - MARK : cy + GAP;
-      return `<div class="mark h" style="left:${hx}in;top:${cy}in"></div><div class="mark v" style="left:${cx}in;top:${vy}in"></div>`;
+      return `<div class="crop h" style="left:${hx}in;top:${cy}in"></div><div class="crop v" style="left:${cx}in;top:${vy}in"></div>`;
     }).join('');
   }
 
@@ -246,8 +251,8 @@
 
   function exportPdf() {
     const visible = [...list.children].filter((p) => !p.classList.contains('hidden'));
-    const fronts = showFront.checked ? visible.map((p) => p.querySelector('.card.front')) : [];
-    const backs = showBack.checked ? visible.map((p) => p.querySelector('.card.back')) : [];
+    const fronts = showFront.checked ? visible.map((p) => p.querySelector('.flashcard.front')) : [];
+    const backs = showBack.checked ? visible.map((p) => p.querySelector('.flashcard.back')) : [];
     if (!fronts.length && !backs.length) return;
     let printRoot = document.getElementById('print');
     if (!printRoot) { printRoot = document.createElement('div'); printRoot.id = 'print'; document.body.appendChild(printRoot); }
@@ -266,7 +271,7 @@
     if (!lbItems.length) return;
     lbIndex = (i + lbItems.length) % lbItems.length;
     const pair = lbItems[lbIndex];
-    const src = pair.querySelector(side === 'back' ? '.card.back' : '.card.front') || pair.querySelector('.card');
+    const src = pair.querySelector(side === 'back' ? '.flashcard.back' : '.flashcard.front') || pair.querySelector('.flashcard');
     lbSide = src.classList.contains('back') ? 'back' : 'front';
     lbStage.innerHTML = '';
     lbStage.appendChild(src.cloneNode(true));
@@ -295,7 +300,7 @@
   // Swallow every touch move while the viewer is open so nothing underneath scrolls
   lb.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   list.addEventListener('click', (e) => {
-    const card = e.target.closest('.card'); if (!card) return;
+    const card = e.target.closest('.flashcard'); if (!card) return;
     const pair = card.closest('.pair');
     lbShow(visiblePairs().indexOf(pair), card.classList.contains('back') ? 'back' : 'front');
   });
@@ -323,31 +328,21 @@
   }, { passive: true });
   window.addEventListener('resize', lbFit);
 
-  // Drawer and card scaling for narrow screens
-  const narrow = window.matchMedia('(max-width: 900px)');
-  const drawerToggle = document.getElementById('drawerToggle');
-  function setDrawer(open) {
-    sidebar.classList.toggle('collapsed', !open);
-    drawerToggle.setAttribute('aria-expanded', String(open));
-    document.documentElement.style.setProperty('--drawer-top', drawerToggle.offsetHeight + 'px');
-  }
-  drawerToggle.addEventListener('click', () => setDrawer(sidebar.classList.contains('collapsed')));
-  // Export closes the drawer so the print dialog opens over the cards, not the menu
-  document.getElementById('exportPdf').addEventListener('click', () => { if (narrow.matches) setDrawer(false); });
+  // Card scaling for narrow screens (below Bootstrap's lg breakpoint, where the sidebar is an offcanvas)
+  const narrow = window.matchMedia('(max-width: 991.98px)');
   function applyLayout() {
     if (narrow.matches) {
       const cardPx = 5 * 96 + 32;               // 5in card plus side gutters
-      const s = Math.min(1, (window.innerWidth) / cardPx);
-      document.documentElement.style.setProperty('--card-scale', s.toFixed(3));
+      document.documentElement.style.setProperty('--card-scale', Math.min(1, window.innerWidth / cardPx).toFixed(3));
     } else {
       document.documentElement.style.removeProperty('--card-scale');
-      sidebar.classList.remove('collapsed');
     }
   }
-  if (!narrow.matches) sidebar.classList.remove('collapsed');
   window.addEventListener('resize', applyLayout);
   narrow.addEventListener('change', applyLayout);
   applyLayout();
+  // Export closes the offcanvas so the print dialog opens over the cards, not the menu
+  document.getElementById('exportPdf').addEventListener('click', () => { if (narrow.matches) bootstrap.Offcanvas.getOrCreateInstance(sidebar).hide(); });
 
   // Fit once the webfont has loaded, otherwise measurements are off.
   document.fonts.ready.then(() => {

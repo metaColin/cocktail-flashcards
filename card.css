@@ -1,7 +1,7 @@
 /* Card design. All dimensions in physical units so screen preview and print agree.
    Card: 5in x 3in (landscape). Photo column 2in x 3in (the IBA photos are 2:3). Text column 3in. */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('vendor/barlow/barlow.css');
 
 :root {
   --card-w: 5in;
@@ -27,7 +27,7 @@
   --card-rule: #333;
 }
 
-.card {
+.flashcard {
   position: relative;
   width: var(--card-w);
   height: var(--card-h);
@@ -53,21 +53,21 @@
   z-index: 2;
 }
 /* Over a photo the guide is white so it reads against the dark backdrop */
-.card.front .punch { border-color: #fff; }
-.no-photo .card.front .punch, .card.front.no-img .punch { border-color: var(--card-fg); }
+.flashcard.front .punch { border-color: #fff; }
+.no-photo .flashcard.front .punch, .flashcard.front.no-img .punch { border-color: var(--card-fg); }
 .no-punch .punch { display: none; }
 
 /* ---------- Front ---------- */
-.card.front { display: flex; }
+.flashcard.front { display: flex; }
 
-.card.front .photo {
+.flashcard.front .photo {
   flex: 0 0 var(--photo-w);
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.card.front .text {
+.flashcard.front .text {
   flex: 1 1 auto;
   padding: var(--pad);
   display: flex;
@@ -77,7 +77,7 @@
   line-height: 1.22;
 }
 
-.card.front .name {
+.flashcard.front .name {
   font-size: 1.9em;
   font-weight: 700;
   line-height: 1;
@@ -85,7 +85,7 @@
   margin: 0 0 0.35em;
 }
 
-.card.front h4 {
+.flashcard.front h4 {
   color: var(--card-accent);
   text-transform: uppercase;
   font-weight: 700;
@@ -93,20 +93,20 @@
   font-size: 0.85em;
   margin: 0.55em 0 0.18em;
 }
-.card.front h4:first-of-type { margin-top: 0; }
+.flashcard.front h4:first-of-type { margin-top: 0; }
 
-.card.front ul {
+.flashcard.front ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.card.front ul.two-col { column-count: 2; column-gap: 0.12in; }
+.flashcard.front ul.two-col { column-count: 2; column-gap: 0.12in; }
 
-.card.front p { margin: 0 0 0.3em; }
-.card.front p:last-child { margin-bottom: 0; }
-.card.front .note { color: var(--card-muted); font-style: italic; }
+.flashcard.front p { margin: 0 0 0.3em; }
+.flashcard.front p:last-child { margin-bottom: 0; }
+.flashcard.front .note { color: var(--card-muted); font-style: italic; }
 
-.card.front .footer {
+.flashcard.front .footer {
   margin-top: auto;
   padding-top: 0.25em;
   border-top: 0.5pt solid var(--card-rule);
@@ -121,7 +121,7 @@
 }
 
 /* ---------- Back ---------- */
-.card.back {
+.flashcard.back {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -129,13 +129,13 @@
   text-align: center;
   padding: var(--pad);
 }
-.card.back .name {
+.flashcard.back .name {
   font-size: 22pt;
   font-weight: 700;
   line-height: 1;
   margin: 0 0 0.08in;
 }
-.card.back .category {
+.flashcard.back .category {
   color: var(--card-accent);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -143,24 +143,24 @@
   font-weight: 600;
   margin-bottom: 0.14in;
 }
-.card.back .qr { width: 1.3in; height: 1.3in; }
-.card.back .qr svg { width: 100%; height: 100%; display: block; }
-.card.back .qr-label { color: var(--card-muted); font-size: 6.5pt; margin-top: 0.06in; }
-.card.back .refs { color: var(--card-muted); font-size: 7pt; line-height: 1.3; max-width: 3.6in; }
-.card.back .refs-title { text-transform: uppercase; letter-spacing: 0.08em; font-size: 6.5pt; font-weight: 700; color: var(--card-accent); margin-bottom: 0.03in; }
+.flashcard.back .qr { width: 1.3in; height: 1.3in; }
+.flashcard.back .qr svg { width: 100%; height: 100%; display: block; }
+.flashcard.back .qr-label { color: var(--card-muted); font-size: 6.5pt; margin-top: 0.06in; }
+.flashcard.back .refs { color: var(--card-muted); font-size: 7pt; line-height: 1.3; max-width: 3.6in; }
+.flashcard.back .refs-title { text-transform: uppercase; letter-spacing: 0.08em; font-size: 6.5pt; font-weight: 700; color: var(--card-accent); margin-bottom: 0.03in; }
 /* QR modules take the card foreground colour so they stay scannable on either theme */
-.card.back .qr svg path:first-child { fill: var(--card-bg); }
-.card.back .qr svg path:last-child { stroke: var(--card-fg); }
+.flashcard.back .qr svg path:first-child { fill: var(--card-bg); }
+.flashcard.back .qr svg path:last-child { stroke: var(--card-fg); }
 
-.card.front .footer .tier { font-weight: 700; }
-.card.front .footer .tier-core { color: var(--card-accent); }
+.flashcard.front .footer .tier { font-weight: 700; }
+.flashcard.front .footer .tier-core { color: var(--card-accent); }
 
 /* ---------- Photos off (toolbar) or no photo for this drink (supplement set) ---------- */
-.no-photo .card.front .photo { display: none; }
-.no-photo .card.front .text, .card.front.no-img .text { font-size: 8.5pt; }
-.no-photo .card.front ul.two-col-wide, .card.front.no-img ul.two-col-wide { column-count: 2; column-gap: 0.15in; }
+.no-photo .flashcard.front .photo { display: none; }
+.no-photo .flashcard.front .text, .flashcard.front.no-img .text { font-size: 8.5pt; }
+.no-photo .flashcard.front ul.two-col-wide, .flashcard.front.no-img ul.two-col-wide { column-count: 2; column-gap: 0.15in; }
 /* Without a photo the punch guide gets its own column: all text starts to the right of the hole */
-.no-photo:not(.no-punch) .card.front .text, html:not(.no-punch) .card.front.no-img .text {
+.no-photo:not(.no-punch) .flashcard.front .text, html:not(.no-punch) .flashcard.front.no-img .text {
   /* same clearance on the right of the hole as on its top and left, and the title's top aligned with the hole's top */
   padding-top: var(--punch-gap);
   padding-left: calc(var(--punch-offset) + var(--punch-d) / 2 + var(--punch-gap));

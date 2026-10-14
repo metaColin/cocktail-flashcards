@@ -71,7 +71,7 @@ function frontHTML(c) {
   const photo = c.image ? `<img class="photo" src="${c.image}" alt="">` : '';
   const rank = c.di_rank ? ` · DI #${c.di_rank}` : '';
   return `
-  <div class="card front${c.image ? '' : ' no-img'}" data-slug="${c.slug}">
+  <div class="flashcard front${c.image ? '' : ' no-img'}" data-slug="${c.slug}">
     <div class="punch"></div>
     ${photo}
     <div class="text">
@@ -98,7 +98,7 @@ function backHTML(c) {
     ? `<div class="qr">${c.qr}</div><div class="qr-label">Scan for the IBA video</div>`
     : '';
   return `
-  <div class="card back" data-slug="${c.slug}">
+  <div class="flashcard back" data-slug="${c.slug}">
     <div class="punch"></div>
     <h1 class="name">${esc(c.name)}</h1>
     <div class="category">${esc(c.category_label)}</div>
@@ -110,7 +110,7 @@ function backHTML(c) {
 // Shrink the text column's font size until nothing overflows the card.
 function fitCards(root = document) {
   const MIN = 5.25; // pt
-  for (const text of root.querySelectorAll('.card.front .text')) {
+  for (const text of root.querySelectorAll('.flashcard.front .text')) {
     text.style.fontSize = '';
     let size = parseFloat(getComputedStyle(text).fontSize) * 0.75; // px -> pt
     text.style.fontSize = size + 'pt';
@@ -119,7 +119,7 @@ function fitCards(root = document) {
       text.style.fontSize = size + 'pt';
     }
     text.dataset.pt = size.toFixed(2);
-    if (text.scrollHeight > text.clientHeight + 0.5) text.closest('.card').classList.add('overflow');
+    if (text.scrollHeight > text.clientHeight + 0.5) text.closest('.flashcard').classList.add('overflow');
   }
 }
 

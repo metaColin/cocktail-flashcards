@@ -27,6 +27,10 @@ node build.mjs    # merge data, assign tiers, generate QR codes -> data.js
 ./make-pdf.sh front,nophoto,nopunch
 ```
 
+## UI shell
+
+The sidebar, drawer, and controls use Bootstrap 5.3 and the Barlow typeface, both vendored under `vendor/` (installed from npm, copied in; no CDN, no third-party requests, works offline). Bootstrap styles only the shell. Cards and the print sheets keep their own CSS in absolute units (5x3 in cards, letter sheets with zero page margin); the on-screen scaling that fits cards to a phone is applied to the browser list only and never to the print tree, so the exported PDF stays 1:1. `index.html` loads local assets with a `?v=N` query; bump it when changing `cards.js`, `card.css`, `print.css`, or `data.js` so browsers do not serve a stale copy.
+
 ## Hosting
 
 Static files only. `.nojekyll` tells GitHub Pages to serve the repo as-is. `data.js` is committed so Pages needs no build; rerun `node build.mjs` and commit after editing any JSON.
