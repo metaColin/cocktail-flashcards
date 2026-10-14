@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IBA Flashcards</title>
+<link rel="stylesheet" href="card.css">
+<link rel="stylesheet" href="print.css">
+<style>
+  body { margin: 0; background: #2a2a2a; color: #ddd; font-family: 'Barlow', sans-serif; display: flex; min-height: 100vh; }
+  .sidebar {
+    position: sticky; top: 0; align-self: flex-start; height: 100vh; box-sizing: border-box; overflow-y: auto;
+    width: 250px; flex: 0 0 250px; background: #1a1a1a; border-right: 1px solid #000; padding: 18px 18px 24px; font-size: 14px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .sidebar h2 { margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #888; }
+  .sidebar section { display: flex; flex-direction: column; gap: 6px; }
+  .sidebar label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .sidebar .sub { color: #777; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; margin: 6px 0 2px; }
+  .sidebar input[type=search] { width: 100%; box-sizing: border-box; background: #111; color: #eee; border: 1px solid #444; padding: 6px 8px; font: inherit; }
+  .sidebar .count { color: #888; }
+  .sidebar .export { margin-top: auto; }
+  .sidebar button { width: 100%; background: #b5312a; color: #fff; border: 0; padding: 10px 12px; font: inherit; font-weight: 600; cursor: pointer; border-radius: 3px; }
+  .sidebar button:hover { background: #d13a31; }
+  .list { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; justify-content: center; align-content: flex-start; }
+  .pair { display: flex; gap: 12px; align-items: flex-start; }
+  .card { box-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  .card.overflow { outline: 2px solid #ff0; }
+  .hidden { display: none !important; }
+  @media print { .sidebar { display: none; } body { background: #fff; display: block; } }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <section>
+    <h2>Search</h2>
+    <input type="search" id="q" placeholder="Name or ingredient">
+    <span class="count" id="count"></span>
+  </section>
+  <section>
+    <h2>Sides</h2>
+    <label><input type="checkbox" id="showFront" checked> Front</label>
+    <label><input type="checkbox" id="showBack"> Back</label>
+  </section>
+  <section>
+    <h2>Units</h2>
+    <label><input type="radio" name="unit" value="oz" checked> US ounces</label>
+    <label><input type="radio" name="unit" value="ml"> Millilitres (IBA)</label>
+  </section>
+  <section>
+    <h2>Card</h2>
+    <label><input type="checkbox" id="photos" checked> Photos</label>
+    <label><input type="checkbox" id="punch" checked> Hole punch guide</label>
+    <label><input type="checkbox" id="dark"> Dark theme (ink hog)</label>
+  </section>
+  <section>
+    <h2>Popularity</h2>
+    <label><input type="checkbox" class="tier" value="core" checked> Core</label>
+    <label><input type="checkbox" class="tier" value="common" checked> Common</label>
+    <label><input type="checkbox" class="tier" value="rare" checked> Rare</label>
+  </section>
+  <section>
+    <h2>Categories</h2>
+    <div class="sub">IBA official</div>
+    <label><input type="checkbox" class="cat" value="the-unforgettables" checked> The Unforgettables</label>
+    <label><input type="checkbox" class="cat" value="contemporary-classics" checked> Contemporary Classics</label>
+    <label><input type="checkbox" class="cat" value="new-era-drinks" checked> New Era Drinks</label>
+    <div class="sub">Not IBA</div>
+    <label><input type="checkbox" class="cat" value="simple-drinks" checked> Simple Drinks</label>
+    <label><input type="checkbox" class="cat" value="other-classics" checked> Other Classics</label>
+    <label><input type="checkbox" class="cat" value="zero-proof" checked> Zero Proof</label>
+    <label><input type="checkbox" class="cat" value="regional" checked> Regional</label>
+  </section>
+  <div class="export"><button id="exportPdf">Export PDF</button></div>
+</aside>
+<div class="list" id="list"></div>
+
+<script src="data.js"></script>
+<script src="cards.js"></script>
+<script>
+  const list = document.getElementById('list');
+  const Cards = window.Cards;
+
+  function render() {
+  list.innerHTML = window.COCKTAILS.map((c) => `
+    <div class="pair" data-slug="${c.slug}" data-cat="${c.category}" data-tier="${c.tier}" data-text="${(c.name + ' ' + c.ingredients.join(' ')).toLowerCase().replace(/"/g, '')}">
+      <div class="side front-side">${Cards.frontHTML(c)}</div>
+      <div class="side back-side hidden">${Cards.backHTML(c)}</div>
+    </div>`).join('');
+  }
+  render();
+
+  function refit() {
+    Cards.fitCards(list);
+    update();
+  }
+
+  function update() {
+    const f = showFront.checked, b = showBack.checked, q = document.getElementById('q').value.toLowerCase();
+    const cats = new Set([...document.querySelectorAll('.cat:checked')].map((c) => c.value));
+    const tiers = new Set([...document.querySelectorAll('.tier:checked')].map((c) => c.value));
+    let n = 0;
+    for (const pair of list.children) {
+      const vis = cats.has(pair.dataset.cat) && tiers.has(pair.dataset.tier) && (!q || pair.dataset.text.includes(q));
+      pair.classList.toggle('hidden', !vis);
+      if (vis) n++;
+      pair.querySelector('.front-side').classList.toggle('hidden', !f);
+      pair.querySelector('.back-side').classList.toggle('hidden', !b);
+    }
+    document.getElementById('count').textContent = `${n} / ${window.COCKTAILS.length}`;
+  }
+
+  dark.addEventListener('change', () => { document.documentElement.dataset.theme = dark.checked ? 'dark' : ''; });
+  for (const id of ['showFront', 'showBack', 'q']) document.getElementById(id).addEventListener('input', update);
+  for (const c of document.querySelectorAll('.cat, .tier')) c.addEventListener('change', update);
+  photos.addEventListener('change', () => { document.documentElement.classList.toggle('no-photo', !photos.checked); refit(); });
+  punch.addEventListener('change', () => { document.documentElement.classList.toggle('no-punch', !punch.checked); refit(); });
+  for (const r of document.querySelectorAll('input[name=unit]')) r.addEventListener('change', () => { Cards.setUnit(r.value); render(); refit(); });
+
+  // ---- Export PDF: lay the visible cards out 4-up on US Letter and open the print dialog ----
+  // Slot geometry (inches) must match print.css.
+  const SLOTS = [[1.25, 0.5], [4.25, 0.5], [1.25, 5.5], [4.25, 5.5]];
+  const SLOT_W = 3, SLOT_H = 5, MARK = 0.2, GAP = 0.05;
+
+  function cropMarks(x, y) {
+    const corners = [[x, y, -1, -1], [x + SLOT_W, y, 1, -1], [x, y + SLOT_H, -1, 1], [x + SLOT_W, y + SLOT_H, 1, 1]];
+    return corners.map(([cx, cy, dx, dy]) => {
+      const hx = dx < 0 ? cx - GAP - MARK : cx + GAP;
+      const vy = dy < 0 ? cy - GAP - MARK : cy + GAP;
+      return `<div class="mark h" style="left:${hx}in;top:${cy}in"></div><div class="mark v" style="left:${cx}in;top:${vy}in"></div>`;
+    }).join('');
+  }
+
+  function buildSheets(cards, mirror) {
+    let html = '';
+    for (let i = 0; i < cards.length; i += 4) {
+      const group = cards.slice(i, i + 4);
+      // Mirror columns for backs so duplex (long-edge flip) lines up with the fronts.
+      const order = mirror ? [1, 0, 3, 2] : [0, 1, 2, 3];
+      html += '<div class="sheet">';
+      order.forEach((src, slot) => {
+        const [x, y] = SLOTS[slot];
+        html += cropMarks(x, y);
+        html += `<div class="slot" style="left:${x}in;top:${y}in">${group[src] ? group[src].outerHTML : ''}</div>`;
+      });
+      html += '</div>';
+    }
+    return html;
+  }
+
+  function exportPdf() {
+    const visible = [...list.children].filter((p) => !p.classList.contains('hidden'));
+    const fronts = showFront.checked ? visible.map((p) => p.querySelector('.card.front')) : [];
+    const backs = showBack.checked ? visible.map((p) => p.querySelector('.card.back')) : [];
+    if (!fronts.length && !backs.length) return;
+    let printRoot = document.getElementById('print');
+    if (!printRoot) { printRoot = document.createElement('div'); printRoot.id = 'print'; document.body.appendChild(printRoot); }
+    printRoot.innerHTML = buildSheets(fronts, false) + buildSheets(backs, true);
+    window.print();
+  }
+  document.getElementById('exportPdf').addEventListener('click', exportPdf);
+  window.addEventListener('afterprint', () => { const p = document.getElementById('print'); if (p) p.remove(); });
+
+  // Fit once the webfont has loaded, otherwise measurements are off.
+  document.fonts.ready.then(() => {
+    refit();
+    const m = location.hash.match(/^#print=(front|back|both)/);
+    if (m) {
+      showFront.checked = m[1] !== 'back';
+      showBack.checked = m[1] !== 'front';
+      if (/nophoto/.test(location.hash)) { photos.checked = false; document.documentElement.classList.add('no-photo'); }
+      if (/nopunch/.test(location.hash)) { punch.checked = false; document.documentElement.classList.add('no-punch'); }
+      if (/\bml\b/.test(location.hash)) { document.querySelector('input[name=unit][value=ml]').checked = true; Cards.setUnit('ml'); render(); }
+      refit();
+      update();
+      const realPrint = window.print; window.print = () => {};
+      exportPdf();
+      window.print = realPrint;
+      document.body.dataset.printReady = '1';
+    }
+  });
+</script>
+</body>
+</html>

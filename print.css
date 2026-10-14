@@ -1,0 +1,48 @@
+/* Print layout: US Letter portrait, four 5x3in cards rotated 90deg (3in wide x 5in tall),
+   two columns x two rows, with crop marks. Only #print is visible when printing. */
+@page { size: 8.5in 11in; margin: 0; }
+
+@media print {
+  body > *:not(#print) { display: none !important; }
+  body { background: #fff !important; margin: 0; }
+  #print { display: block; }
+}
+@media screen { #print { display: none; } }
+
+#print .sheet {
+  width: 8.5in;
+  height: 11in;
+  position: relative;
+  page-break-after: always;
+  break-after: page;
+  overflow: hidden;
+}
+#print .sheet:last-child { page-break-after: auto; break-after: auto; }
+
+/* Slots: 3in x 5in, two columns at x=1.25in and 4.25in, two rows at y=0.5in and 5.5in */
+#print .slot {
+  position: absolute;
+  width: 3in;
+  height: 5in;
+}
+#print .slot:nth-child(1) { left: 1.25in; top: 0.5in; }
+#print .slot:nth-child(2) { left: 4.25in; top: 0.5in; }
+#print .slot:nth-child(3) { left: 1.25in; top: 5.5in; }
+#print .slot:nth-child(4) { left: 4.25in; top: 5.5in; }
+
+/* Rotate the 5x3 card into the 3x5 slot */
+#print .slot .card {
+  position: absolute;
+  left: 1.5in;  /* centre of the 3x5 slot, then rotate the 5x3 card about its own centre */
+  top: 2.5in;
+  transform: translate(-50%, -50%) rotate(90deg);
+  box-shadow: none !important;
+}
+
+/* Crop marks: short hairlines just outside each slot corner */
+#print .mark {
+  position: absolute;
+  background: #000;
+}
+#print .mark.h { width: 0.2in; height: 0.25pt; }
+#print .mark.v { width: 0.25pt; height: 0.2in; }

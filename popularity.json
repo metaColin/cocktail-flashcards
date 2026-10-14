@@ -1,0 +1,42 @@
+{
+  "_source": "Drinks International, 'The bestselling classic cocktails at the world's best bars 2026' (Cocktail Report 2026, published 2026-04-28). Poll of ~100 top bars in 30+ countries, each naming its ten bestselling classics.",
+  "_url": "https://drinksint.com/news/fullstory.php/aid/12284/.html",
+  "_tiers": "core = DI top 15 or a US on-premise volume staple (CGA by NIQ); common = DI 16-50 or a routine event-bar order; rare = everything else.",
+  "_us_staples_source": "CGA by NIQ, Cocktail Sales Tracker (bevindustry.com 2024-12-30; nielseniq.com 2025-06-24): Margarita first by volume at ~4x the next drink, then Mimosa, Mojito, Espresso Martini, Spritz, Old Fashioned, Martini, Daiquiri, Pina Colada.",
+  "di_2026": [
+    "Negroni", "Margarita", "Old Fashioned", "Dry Martini", "Espresso Martini",
+    "Daiquiri", "Aperol Spritz", "Paloma", "Whiskey Sour", "Manhattan",
+    "Amaretto Sour", "Mojito", "Gimlet", "Bloody Mary", "Americano",
+    "Moscow Mule", "Bamboo", "Zombie", "Boulevardier", "Penicillin",
+    "Pisco Sour", "Clover Club", "French 75", "Mai Tai", "Gin Fizz",
+    "Pornstar Martini", "Gin Basil Smash", "Vodka Martini", "Bee's Knees", "Vesper",
+    "Last Word", "Paper Plane", "Caipirinha", "Mezcal Margarita", "Aviation",
+    "Negroni Sbagliato", "Scotch Sour", "Brandy Crusta", "Milano Torino", "Bramble",
+    "Garibaldi", "Champagne Cocktail", "Cuba Libre", "Pina Colada", "East 8 Hold-up",
+    "Vieux Carre", "Bellini", "Sidecar", "Southside", "Naked & Famous"
+  ],
+  "aliases": {
+    "Aperol Spritz": "Spritz",
+    "Pornstar Martini": "Porn Star Martini",
+    "Pina Colada": "Piña Colada",
+    "Vieux Carre": "Vieux Carré",
+    "Southside": "South Side",
+    "Naked & Famous": "Naked and Famous",
+    "Mai Tai": "Mai-Tai",
+    "French 75": "French 75"
+  },
+  "us_staples_core": [
+    "Margarita", "Mimosa", "Mojito", "Espresso Martini", "Spritz", "Old Fashioned", "Dry Martini",
+    "Daiquiri", "Piña Colada", "Cosmopolitan", "Long Island Ice Tea", "Long Island Iced Tea",
+    "Moscow Mule", "Bloody Mary", "Manhattan", "Whiskey Sour", "Negroni", "Paloma",
+    "Gin & Tonic", "Vodka Soda", "Vodka Tonic", "Rum & Coke", "Whiskey Ginger", "Whiskey & Coke",
+    "Screwdriver", "Vodka Cranberry", "Tom Collins", "Vodka Martini", "Dirty Martini", "Lemon Drop Martini"
+  ],
+  "event_common": [
+    "Sex on the Beach", "Tequila Sunrise", "Irish Coffee", "Bellini", "Kir", "Kir Royal",
+    "Mint Julep", "Dark 'n' Stormy", "Greyhound", "Kamikaze", "Hot Toddy", "Wine Spritzer",
+    "Shirley Temple", "Arnold Palmer", "Amaretto Sour", "Gimlet", "Scotch & Soda", "Bootleg",
+    "Cuba Libre", "John Collins", "Sea Breeze", "Mai-Tai", "Hemingway Special", "French Martini",
+    "Black Russian", "White Russian", "B52", "B-52", "Grasshopper", "Alexander", "Sidecar"
+  ]
+}
