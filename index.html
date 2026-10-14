@@ -121,6 +121,7 @@
           </div>
         </section>
         <button class="btn btn-danger w-100 fw-semibold" id="exportPdf">Export PDF</button>
+        <button class="btn btn-outline-secondary btn-sm w-100 mt-2" id="resetSettings">Reset to defaults</button>
       </div>
     </aside>
     <main class="col-lg-9 col-xl-10 px-0">
@@ -223,6 +224,20 @@
   punch.addEventListener('change', () => { document.documentElement.classList.toggle('no-punch', !punch.checked); refit(); });
   for (const r of document.querySelectorAll('input[name=unit]')) r.addEventListener('change', () => { Cards.setUnit(r.value); render(); refit(); });
   for (const r of document.querySelectorAll('input[name=sort], input[name=dir]')) r.addEventListener('change', () => { render(); refit(); });
+
+  // Defaults are whatever the markup says: the checked attributes and an empty search box.
+  document.getElementById('resetSettings').addEventListener('click', () => {
+    for (const el of controls()) {
+      if (el.type === 'search') el.value = el.defaultValue; else el.checked = el.defaultChecked;
+    }
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* ignore */ }
+    document.documentElement.dataset.theme = dark.checked ? 'dark' : '';
+    document.documentElement.classList.toggle('no-photo', !photos.checked);
+    document.documentElement.classList.toggle('no-punch', !punch.checked);
+    Cards.setUnit(document.querySelector('input[name=unit]:checked').value);
+    render();
+    refit();
+  });
 
   // ---- Export PDF: lay the visible cards out 4-up on US Letter and open the print dialog ----
   // Slot geometry (inches) must match print.css.
