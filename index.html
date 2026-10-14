@@ -38,7 +38,8 @@
     .drawer-toggle .count { color: #888; }
     .drawer-toggle .drawer-label { display: flex; align-items: center; gap: 12px; }
     .drawer-toggle .hamburger { flex: none; }
-    .sidebar { position: static; width: 100%; align-self: stretch; flex: none; height: auto; border-right: 0; border-bottom: 1px solid #000; gap: 14px; }
+    /* The drawer is a fixed panel under the header, so it opens in view no matter how far down the list you are */
+    .sidebar { position: fixed; top: var(--drawer-top, 47px); left: 0; right: 0; bottom: 0; z-index: 12; width: auto; height: auto; overflow-y: auto; overscroll-behavior: contain; border-right: 0; gap: 14px; padding-bottom: 40px; }
     .sidebar section { flex-direction: row; flex-wrap: wrap; gap: 6px 18px; }
     .sidebar section h2, .sidebar section .sub, .sidebar input[type=search] { flex-basis: 100%; }
     .sidebar.collapsed { display: none; }
@@ -325,10 +326,14 @@
   // Drawer and card scaling for narrow screens
   const narrow = window.matchMedia('(max-width: 900px)');
   const drawerToggle = document.getElementById('drawerToggle');
-  drawerToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
-    drawerToggle.setAttribute('aria-expanded', String(!sidebar.classList.contains('collapsed')));
-  });
+  function setDrawer(open) {
+    sidebar.classList.toggle('collapsed', !open);
+    drawerToggle.setAttribute('aria-expanded', String(open));
+    document.documentElement.style.setProperty('--drawer-top', drawerToggle.offsetHeight + 'px');
+  }
+  drawerToggle.addEventListener('click', () => setDrawer(sidebar.classList.contains('collapsed')));
+  // Export closes the drawer so the print dialog opens over the cards, not the menu
+  document.getElementById('exportPdf').addEventListener('click', () => { if (narrow.matches) setDrawer(false); });
   function applyLayout() {
     if (narrow.matches) {
       const cardPx = 5 * 96 + 32;               // 5in card plus side gutters
