@@ -112,6 +112,37 @@
   const list = document.getElementById('list');
   const Cards = window.Cards;
 
+  // ---- Persist every control in the sidebar across reloads (per browser, via localStorage).
+  const STORE_KEY = 'cocktail-flashcards.settings';
+  const controls = () => [...sidebar.querySelectorAll('input')];
+  const controlKey = (el) => el.type === 'radio' ? `${el.name}=${el.value}` : (el.id || `${el.className}=${el.value}`);
+  function saveSettings() {
+    try {
+      const s = {};
+      for (const el of controls()) s[controlKey(el)] = el.type === 'search' ? el.value : el.checked;
+      localStorage.setItem(STORE_KEY, JSON.stringify(s));
+    } catch (e) { /* private mode or storage blocked: settings just don't persist */ }
+  }
+  function restoreSettings() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!s) return;
+      for (const el of controls()) {
+        const k = controlKey(el);
+        if (!(k in s)) continue;
+        if (el.type === 'search') el.value = s[k]; else el.checked = s[k];
+      }
+    } catch (e) { /* ignore unreadable storage */ }
+  }
+  const sidebar = document.getElementById('sidebar');
+  restoreSettings();
+  document.documentElement.dataset.theme = dark.checked ? 'dark' : '';
+  document.documentElement.classList.toggle('no-photo', !photos.checked);
+  document.documentElement.classList.toggle('no-punch', !punch.checked);
+  Cards.setUnit(document.querySelector('input[name=unit]:checked').value);
+  sidebar.addEventListener('input', saveSettings);
+  sidebar.addEventListener('change', saveSettings);
+
   const TIER_ORDER = { core: 0, common: 1, rare: 2 };
   const CAT_ORDER = ['the-unforgettables', 'contemporary-classics', 'new-era-drinks', 'simple-drinks', 'other-classics', 'zero-proof', 'regional'];
   const SORTS = {
@@ -206,7 +237,6 @@
   window.addEventListener('afterprint', () => { const p = document.getElementById('print'); if (p) p.remove(); });
 
   // Drawer and card scaling for narrow screens
-  const sidebar = document.getElementById('sidebar');
   const narrow = window.matchMedia('(max-width: 900px)');
   const drawerToggle = document.getElementById('drawerToggle');
   drawerToggle.addEventListener('click', () => {
