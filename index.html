@@ -71,6 +71,10 @@
             <div class="form-check"><input class="form-check-input" type="radio" name="sort" id="sortPop" value="popularity"><label class="form-check-label" for="sortPop">Popularity</label></div>
             <div class="form-check"><input class="form-check-input" type="radio" name="sort" id="sortCat" value="category"><label class="form-check-label" for="sortCat">Category</label></div>
           </div>
+          <div class="checks mt-1">
+            <div class="form-check"><input class="form-check-input" type="radio" name="dir" id="dirAsc" value="asc" checked><label class="form-check-label" for="dirAsc">Ascending</label></div>
+            <div class="form-check"><input class="form-check-input" type="radio" name="dir" id="dirDesc" value="desc"><label class="form-check-label" for="dirDesc">Descending</label></div>
+          </div>
         </section>
         <section>
           <h2>Sides</h2>
@@ -178,9 +182,11 @@
     category: (a, b) => CAT_ORDER.indexOf(a.category) - CAT_ORDER.indexOf(b.category) || a.name.localeCompare(b.name),
   };
   function sortKey() { return document.querySelector('input[name=sort]:checked').value; }
+  function sortDir() { return document.querySelector('input[name=dir]:checked').value; }
 
   function render() {
   const ordered = [...window.COCKTAILS].sort(SORTS[sortKey()]);
+  if (sortDir() === 'desc') ordered.reverse();
   list.innerHTML = ordered.map((c) => `
     <div class="pair" data-slug="${c.slug}" data-cat="${c.category}" data-tier="${c.tier}" data-text="${(c.name + ' ' + c.ingredients.join(' ')).toLowerCase().replace(/"/g, '')}">
       <div class="side front-side">${Cards.frontHTML(c)}</div>
@@ -216,7 +222,7 @@
   photos.addEventListener('change', () => { document.documentElement.classList.toggle('no-photo', !photos.checked); refit(); });
   punch.addEventListener('change', () => { document.documentElement.classList.toggle('no-punch', !punch.checked); refit(); });
   for (const r of document.querySelectorAll('input[name=unit]')) r.addEventListener('change', () => { Cards.setUnit(r.value); render(); refit(); });
-  for (const r of document.querySelectorAll('input[name=sort]')) r.addEventListener('change', () => { render(); refit(); });
+  for (const r of document.querySelectorAll('input[name=sort], input[name=dir]')) r.addEventListener('change', () => { render(); refit(); });
 
   // ---- Export PDF: lay the visible cards out 4-up on US Letter and open the print dialog ----
   // Slot geometry (inches) must match print.css.
