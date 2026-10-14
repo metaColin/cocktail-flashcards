@@ -48,7 +48,20 @@
     /* zoom scales the 5x3in cards to fit: --card-scale is set from the viewport width by script */
     .pair { zoom: var(--card-scale, 1); flex-wrap: wrap; justify-content: center; }
   }
-  @media print { .sidebar, .drawer-toggle { display: none; } body { background: #fff; display: block; } }
+  /* Lightbox: tap a card to focus on it; swipe or arrow keys to move through the visible cards */
+  .list .card { cursor: zoom-in; }
+  .lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; touch-action: pan-y; }
+  .lightbox.open { display: flex; }
+  .lightbox .stage { position: relative; transform-origin: center center; }
+  .lightbox .stage .card { box-shadow: 0 8px 40px rgba(0,0,0,.8); cursor: default; }
+  .lightbox .bar { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; color: #ddd; font-size: 14px; }
+  .lightbox .bar button, .lightbox .nav { background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 4px; padding: 8px 12px; font: inherit; cursor: pointer; }
+  .lightbox .bar button:hover, .lightbox .nav:hover { background: rgba(255,255,255,.2); }
+  .lightbox .nav { position: fixed; top: 50%; transform: translateY(-50%); font-size: 22px; padding: 14px 12px; }
+  .lightbox .nav.prev { left: 8px; } .lightbox .nav.next { right: 8px; }
+  .lightbox .pos { color: #888; }
+  @media (max-width: 900px) { .lightbox .nav { display: none; } }
+  @media print { .sidebar, .drawer-toggle, .lightbox { display: none !important; } body { background: #fff; display: block; } }
 </style>
 </head>
 <body>
@@ -105,6 +118,12 @@
   <div class="export"><button id="exportPdf">Export PDF</button></div>
 </aside>
 <div class="list" id="list"></div>
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Card viewer">
+  <div class="bar"><span class="pos" id="lbPos"></span><span><button type="button" id="lbFlip">Flip</button> <button type="button" id="lbClose" aria-label="Close">✕</button></span></div>
+  <button type="button" class="nav prev" id="lbPrev" aria-label="Previous">‹</button>
+  <div class="stage" id="lbStage"></div>
+  <button type="button" class="nav next" id="lbNext" aria-label="Next">›</button>
+</div>
 
 <script src="data.js"></script>
 <script src="cards.js"></script>
@@ -235,6 +254,60 @@
   }
   document.getElementById('exportPdf').addEventListener('click', exportPdf);
   window.addEventListener('afterprint', () => { const p = document.getElementById('print'); if (p) p.remove(); });
+
+  // ---- Lightbox
+  const lb = document.getElementById('lightbox'), lbStage = document.getElementById('lbStage'), lbPos = document.getElementById('lbPos');
+  let lbItems = [], lbIndex = 0, lbSide = 'front';
+  function visiblePairs() { return [...list.querySelectorAll('.pair:not(.hidden)')]; }
+  function lbShow(i, side) {
+    lbItems = visiblePairs();
+    if (!lbItems.length) return;
+    lbIndex = (i + lbItems.length) % lbItems.length;
+    const pair = lbItems[lbIndex];
+    const src = pair.querySelector(side === 'back' ? '.card.back' : '.card.front') || pair.querySelector('.card');
+    lbSide = src.classList.contains('back') ? 'back' : 'front';
+    lbStage.innerHTML = '';
+    lbStage.appendChild(src.cloneNode(true));
+    lbPos.textContent = `${lbIndex + 1} / ${lbItems.length}`;
+    lbFit();
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function lbFit() {
+    const card = lbStage.firstElementChild; if (!card) return;
+    const w = 5 * 96, hgt = 3 * 96;                      // card size in CSS px
+    const s = Math.min((window.innerWidth - 24) / w, (window.innerHeight - 90) / hgt);
+    lbStage.style.transform = `scale(${s.toFixed(3)})`;
+  }
+  function lbClose() { lb.classList.remove('open'); lbStage.innerHTML = ''; document.body.style.overflow = ''; }
+  list.addEventListener('click', (e) => {
+    const card = e.target.closest('.card'); if (!card) return;
+    const pair = card.closest('.pair');
+    lbShow(visiblePairs().indexOf(pair), card.classList.contains('back') ? 'back' : 'front');
+  });
+  document.getElementById('lbClose').addEventListener('click', lbClose);
+  document.getElementById('lbPrev').addEventListener('click', () => lbShow(lbIndex - 1, lbSide));
+  document.getElementById('lbNext').addEventListener('click', () => lbShow(lbIndex + 1, lbSide));
+  document.getElementById('lbFlip').addEventListener('click', () => lbShow(lbIndex, lbSide === 'front' ? 'back' : 'front'));
+  lb.addEventListener('click', (e) => { if (e.target === lb) lbClose(); });
+  document.addEventListener('keydown', (e) => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') lbClose();
+    else if (e.key === 'ArrowRight') lbShow(lbIndex + 1, lbSide);
+    else if (e.key === 'ArrowLeft') lbShow(lbIndex - 1, lbSide);
+    else if (e.key === ' ' || e.key === 'f') { e.preventDefault(); lbShow(lbIndex, lbSide === 'front' ? 'back' : 'front'); }
+  });
+  // Swipe: horizontal to move between cards, tap on the card to flip it
+  let touchX = null, touchY = null;
+  lb.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive: true });
+  lb.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX, dy = e.changedTouches[0].clientY - touchY;
+    touchX = touchY = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) lbShow(lbIndex + (dx < 0 ? 1 : -1), lbSide);
+    else if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && e.target.closest('.stage')) lbShow(lbIndex, lbSide === 'front' ? 'back' : 'front');
+  }, { passive: true });
+  window.addEventListener('resize', lbFit);
 
   // Drawer and card scaling for narrow screens
   const narrow = window.matchMedia('(max-width: 900px)');
