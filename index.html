@@ -63,6 +63,12 @@
     <span class="count" id="count"></span>
   </section>
   <section>
+    <h2>Sort</h2>
+    <label><input type="radio" name="sort" value="name" checked> Name</label>
+    <label><input type="radio" name="sort" value="popularity"> Popularity</label>
+    <label><input type="radio" name="sort" value="category"> Category</label>
+  </section>
+  <section>
     <h2>Sides</h2>
     <label><input type="checkbox" id="showFront" checked> Front</label>
     <label><input type="checkbox" id="showBack"> Back</label>
@@ -106,8 +112,19 @@
   const list = document.getElementById('list');
   const Cards = window.Cards;
 
+  const TIER_ORDER = { core: 0, common: 1, rare: 2 };
+  const CAT_ORDER = ['the-unforgettables', 'contemporary-classics', 'new-era-drinks', 'simple-drinks', 'other-classics', 'zero-proof', 'regional'];
+  const SORTS = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    // tier first, then Drinks International rank (unranked last), then name
+    popularity: (a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier] || (a.di_rank || 999) - (b.di_rank || 999) || a.name.localeCompare(b.name),
+    category: (a, b) => CAT_ORDER.indexOf(a.category) - CAT_ORDER.indexOf(b.category) || a.name.localeCompare(b.name),
+  };
+  function sortKey() { return document.querySelector('input[name=sort]:checked').value; }
+
   function render() {
-  list.innerHTML = window.COCKTAILS.map((c) => `
+  const ordered = [...window.COCKTAILS].sort(SORTS[sortKey()]);
+  list.innerHTML = ordered.map((c) => `
     <div class="pair" data-slug="${c.slug}" data-cat="${c.category}" data-tier="${c.tier}" data-text="${(c.name + ' ' + c.ingredients.join(' ')).toLowerCase().replace(/"/g, '')}">
       <div class="side front-side">${Cards.frontHTML(c)}</div>
       <div class="side back-side hidden">${Cards.backHTML(c)}</div>
@@ -142,6 +159,7 @@
   photos.addEventListener('change', () => { document.documentElement.classList.toggle('no-photo', !photos.checked); refit(); });
   punch.addEventListener('change', () => { document.documentElement.classList.toggle('no-punch', !punch.checked); refit(); });
   for (const r of document.querySelectorAll('input[name=unit]')) r.addEventListener('change', () => { Cards.setUnit(r.value); render(); refit(); });
+  for (const r of document.querySelectorAll('input[name=sort]')) r.addEventListener('change', () => { render(); refit(); });
 
   // ---- Export PDF: lay the visible cards out 4-up on US Letter and open the print dialog ----
   // Slot geometry (inches) must match print.css.
